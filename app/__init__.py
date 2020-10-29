@@ -1,5 +1,4 @@
 import os
-
 from flask import Flask
 from .auth import auth as auth_blueprint
 from .main import main as main_blueprint
@@ -34,3 +33,5 @@ def create_app(test_config=None):
     #     return 'Hello, World!'
 
     return app
+
+app = create_app()
