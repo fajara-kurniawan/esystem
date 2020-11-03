@@ -1,10 +1,127 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
 
-{% block content %}
-<h1 class="title">
-  Flask Login Example
-</h1>
-<h2 class="subtitle">
-  Easy authentication and authorization in Flask.
-</h2>
-{% endblock %}
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Elastic Beauties</title>
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/index.css') }}">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/pure-forms.css') }}">
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css" />-->
+</head>
+
+<body>
+        <nav class="navbar">
+            <div class="container">
+                    <div class="navbar-end">
+                        <a href="{{ url_for('logout') }}" class="navbar-item">
+                            Logout
+                        </a>
+                    </div>
+            </div>
+        </nav>
+        <div class="Apps-title">
+              <h1 class="title">
+                Elastic.Beauties
+              </h1>
+              <h2 class="subtitle">
+                eSystem for Inventory Applications
+              </h2>
+
+        </div>
+        <form class="pure-form pure-form-aligned" method="POST" action="/transactions_input">
+            <fieldset>
+                <div class="pure-control-group">
+                    <label for="aligned-date">Date</label>
+                    <input type="date" id="aligned-date" placeholder="Date" name="date"/>
+                    <span class="pure-form-message-inline">This is a required field.</span>
+                </div>
+                <div class="pure-control-group">
+                    <label for="aligned-total">Total</label>
+                    <input type="number" id="aligned-total" placeholder="0" name="total"/>
+                </div>
+                <div class="pure-control-group">
+                    <label for="aligned-buyername">Buyer Name</label>
+                    <input type="text" id="aligned-buyername"  name="buyername" />
+                </div>
+                <div class="pure-control-group">
+                    <label for="aligned-via">Via</label>
+                    <input type="text" id="aligned-via" name="via"/>
+                </div>
+                <div class="pure-control-group">
+                    <label for="aligned-shippingcost">Shipping Cost</label>
+                    <input type="number" id="aligned-shippingcost" placeholder="0" name="shippingcost"/>
+                </div>
+                <div class="pure-control-group">
+                    <label for="aligned-packingcost">Packing Cost</label>
+                    <input type="number" id="aligned-packingcost" placeholder="0" name="packingcost"/>
+                </div>
+                <div class="pure-control-group">
+                    <label for="aligned-insurance">Insurance</label>
+                    <input type="number" id="aligned-insurance" placeholder="0" name="insurance"/>
+                </div>
+                <div class="pure-control-group">
+                    <label for="aligned-freeshippingadmin">Free Shipping Admin</label>
+                    <input type="number" id="aligned-freeshippingadmin" placeholder="0" name="freeshippingadmin"/>
+                </div>
+                <div class="pure-control-group">
+                    <label for="aligned-pmstaradmin">PM / Star Admin</label>
+                    <input type="number" id="aligned-pmstaradmin" placeholder="0" name="pmstaradmin"/>
+                </div>
+                <div class="pure-control-group">
+                    <label for="aligned-giftcost">Gift Cost</label>
+                    <input type="number" id="aligned-giftcost" placeholder="0" name="giftcost"/>
+                </div>
+                <div class="pure-control-group">
+                    <label for="aligned-paymentvia">Payment Via</label>
+                    <input type="text" id="aligned-paymentvia" name="paymentvia"/>
+                </div>
+                <div class="pure-control-group">
+                    <label for="aligned-transactiontype">Transaction Type</label>
+                    <input type="text" id="aligned-transactiontype"  name="transactiontype"/>
+                </div>
+                <div class="pure-control-group">
+                    <label for="aligned-totalprofit">Total Profit</label>
+                    <input type="number" id="aligned-totalprofit" placeholder="0" name="totalprofit"/>
+                </div>
+                <div class="pure-controls">
+                    <button type="submit" class="pure-button pure-button-primary">Submit</button>
+                </div>
+<!--                <div class="pure-controls">-->
+<!--                    <label for="aligned-cb" class="pure-checkbox">-->
+<!--                        <input type="checkbox" id="aligned-cb" /> I&#x27;ve read the terms and conditions</label>-->
+<!--                    <button type="submit" class="pure-button pure-button-primary">Submit</button>-->
+<!--                </div>-->
+            </fieldset>
+        </form>
+        <div class="container">
+            <div class="div-table">
+                {% block content %}
+
+                <table class="styled-table">
+                    <thead>
+                  <tr>
+                  {% for col in columns %}
+                      <th>{{ col }}</th>
+                  {% endfor %}
+                  </tr>
+                    </thead>
+                    <tbody>
+                  {% for row in rows %}
+                  <tr>
+                    {% for col in columns %}
+                      <td>{{ row[col] }}</td>
+                    {% endfor %}
+                  </tr>
+                  {% endfor %}
+                    </tbody>
+                </table>
+
+                {% endblock %}
+            </div>
+        </div>
+</body>
+
+</html>
+
