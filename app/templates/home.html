@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Elastic Beauties</title>
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/bulma.css') }}">
+</head>
+
+    <body>
+            <nav class="navbar">
+                <div class="container">
+                        <div class="navbar-end">
+                            <a href="{{ url_for('home') }}" class="navbar-item">
+                                Home
+                            </a>
+                            <a href="{{ url_for('transactions_edit') }}" class="navbar-item">
+                                Input Transaction
+                            </a>
+                            <a href="{{ url_for('logout') }}" class="navbar-item">
+                                Logout
+                            </a>
+                        </div>
+                </div>
+            </nav>
+            <section>
+                <div class="hero">
+                  <div class="hero-body">
+                    <div class="container has-text-centered">
+                      <h1 class="title">
+                          Elastic.Beauties
+                      </h1>
+                      <h2 class="subtitle">
+                        eSystem for Inventory Applications
+                      </h2>
+                    </div>
+                  </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="container is-centered">
+                    <form method="POST" action="/transactions_search">
+                        <div class="columns is-centered">
+                                <div class="column is-one-third">
+                                </div>
+                                <div class="column ">
+                                    <p class="is-size-4"> From</p>
+                                </div>
+                                <div class="column">
+                                    <div class="control">
+                                        <input class="input is-danger" type="date" name="from_date">
+                                    </div>
+                                </div>
+
+                                <div class="column">
+                                </div>
+                                <div class="column">
+                                    <p class="is-size-4"> To</p>
+                                </div>
+                                <div class="column">
+                                    <div class="control">
+                                        <input class="input is-danger" type="date" name="to_date">
+                                    </div>
+                                </div>
+                                <div class="column">
+                                    <div class="control">
+                                        <button type="submit" class="button is-primary">
+                                            Submit
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="column is-one-third">
+                                </div>
+                        </div>
+                        </form>
+                </div>
+            </section>
+
+    <section class="section">
+        <div class="container">
+            <div class="table-container">
+                {% block content %}
+
+                <table class="table">
+                    <thead>
+                  <tr>
+                  {% for col in columns %}
+                      <th>{{ col.replace("_"," ").title() }}</th>
+                  {% endfor %}
+                  </tr>
+                    </thead>
+                    <tbody>
+                  {% for row in rows %}
+                  <tr>
+                    {% for col in columns %}
+                      <td>{{ row[col] }}</td>
+                    {% endfor %}
+                      <td>
+                          <form method="POST" action="/transactions_update" >
+                            <input type="hidden" value="{{ row['transaction_id'] }}" name="updateid"/>
+                            <button class="button is-info is-small">update</button>
+                        </form>
+                      </td>
+                      <td>
+                          <form method="POST" action="/transactions_delete" >
+                            <input type="hidden" value="{{ row['transaction_id'] }}" name="deleteid"/>
+                            <button class="button is-danger is-small">delete</button>
+                        </form>
+                      </td>
+<!--                      <td>-->
+<!--                          <button class="button is-danger is-small"-->
+<!--                                   onclick="return confirm('Are you sure you want to search Google?')">Delete</button> </td>-->
+                  </tr>
+                  {% endfor %}
+                    </tbody>
+                </table>
+
+                {% endblock %}
+            </div>
+        </div>
+    </section>
+
+<!--    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">-->
+<!--        <div class="modal-dialog">-->
+<!--            <div class="modal-content">-->
+<!--                <div class="modal-header">-->
+<!--                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>-->
+<!--                     <h3 class="modal-title" id="myModalLabel">Warning!</h3>-->
+
+<!--                </div>-->
+<!--                <div class="modal-body">-->
+<!--                     <h4> Are you sure you want to DELETE?</h4>-->
+
+<!--                </div>-->
+<!--                &lt;!&ndash;/modal-body-collapse &ndash;&gt;-->
+<!--                <div class="modal-footer">-->
+<!--                    <button type="button" class="btn btn-danger" id="btnDelteYes" href="#">Yes</button>-->
+<!--                    <button type="button" class="btn btn-default" data-dismiss="modal">No</button>-->
+<!--                </div>-->
+<!--                &lt;!&ndash;/modal-footer-collapse &ndash;&gt;-->
+<!--            </div>-->
+<!--            &lt;!&ndash; /.modal-content &ndash;&gt;-->
+<!--        </div>-->
+<!--    &lt;!&ndash; /.modal-dialog &ndash;&gt;-->
+<!--    </div>-->
+
+</body>
+
+</html>
+
