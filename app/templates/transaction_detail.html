@@ -17,9 +17,6 @@
                         <a href="{{ url_for('home') }}" class="navbar-item">
                             Home
                         </a>
-                        <a href="{{ url_for('transactions_edit') }}" class="navbar-item">
-                            Input Transaction
-                        </a>
                         <a href="{{ url_for('logout') }}" class="navbar-item">
                             Logout
                         </a>
@@ -43,7 +40,7 @@
 
     <section>
         {% block content %}
-        <form method="POST" action="/test_post">
+        <form method="POST" action="/transaction_detail_input">
             <div class="container" id="areaproduct">
                 <div class="columns">
                     <div class="column"></div>
@@ -56,11 +53,20 @@
                 <div class="field">
                   <div class="control">
                       <div class="select">
-                        <select class="brand_name">
-                            <option disabled selected value> -- select brand -- </option>
-                            {% for brand in brand_result %}
-                                    <option value="{{brand}}">{{brand}}</option>-->
-                            {% endfor %}
+                        <select class="brand_name" name="brandname">
+                            {% if data %}
+                                <option value="{{data['data_detail']['brand_name']}}"> {{data['data_detail']['brand_name']}} </option>
+                                {% for brand in brand_result %}
+                                    {% if brand != data['data_detail']['brand_name'] %}
+                                        <option value="{{brand}}">{{brand}}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <option disabled selected value> -- select brand -- </option>-->
+                                {% for brand in brand_result %}
+                                        <option value="{{brand}}">{{brand}}</option>-->
+                                {% endfor %}
+                            {% endif %}
                         </select>
                       </div>
                   </div>
@@ -75,8 +81,12 @@
                 <div class="field">
                   <div class="control">
                       <div class="select">
-                        <select class="product_name">
+                        <select class="product_name" name="productname">
+                            {% if data %}
+                            <option value="{{data['data_detail']['product_name']}}"> {{data['data_detail']['product_name']}} </option>
+                            {% else %}
                             <option disabled selected value> -- select product -- </option>
+                            {% endif %}
                         </select>
                       </div>
                   </div>
@@ -90,7 +100,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control">
-                    <input class="input" type="number" name="productamount">
+                    <input class="input" type="number" name="productamount" value="{{ data['data_detail']['amount'] if data != None else 0 }}">
                   </div>
                 </div>
               </div>
@@ -102,7 +112,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control">
-                    <input class="input" type="number" name="productsellprice">
+                    <input class="input" type="number" name="productsellprice" value="{{ data['data_detail']['sell_price'] if data != None else 0 }}">
                   </div>
                 </div>
               </div>
@@ -114,7 +124,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control">
-                    <input class="input" type="number" name="producttotal">
+                    <input class="input" type="number" name="producttotal" value="{{ data['data_detail']['total'] if data != None else 0 }}">
                   </div>
                 </div>
               </div>
@@ -126,7 +136,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control">
-                    <input class="input" type="number" name="productprofit">
+                    <input class="input" type="number" name="productprofit" value="{{ data['data_detail']['profit'] if data != None else 0 }}">
                   </div>
                 </div>
               </div>
@@ -138,14 +148,16 @@
               <div class="field-body">
                 <div class="field is-grouped">
                   <div class="control">
-                    <button type="button" class="button is-primary  is-centered">{{ "Update" if data != None else "Add" }}</button>
+                      {% if data%}
+                      <input type="hidden" value="{{ data['data_detail']['transaction_detail_id']}}" name="transactiondetailid">
+                      {%endif%}
+                    <button type="submit" name='transactionid' value="{{ transaction_id }}" class="button is-primary is-centered">{{ "Update" if data != None else "Save" }}</button>
                   </div>
-                  <div class="control">
-                    <button type="button" class="button is-primary  is-link">{{ "Next" if data != None else "More" }}</button>
-                  </div>
-                  <div class="control">
-                    <button type="submit" class="button is-primary  is-success">Done</button>
-                  </div>
+                    <div class="control">
+                        <button class="button is-primary">
+                                <a class="has-text-light" href='{{"/transactions_view/{}".format(transaction_id)}}'>Return</a>
+                        </button>
+                    </div>
                 </div>
               </div>
 

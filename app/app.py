@@ -74,19 +74,6 @@ def request_loader(request):
 def index():
     return render_template('login.html')
 
-@app.route('/home')
-@flask_login.login_required
-def home():
-    conn = get_db_connection()
-    cursor = conn.execute('''SELECT t.transaction_id,t.date,t.buyer_name,t.via,t.total,t.transaction_type,
-                            t.payment_via,t.shipping_cost,t.packing_cost,t.insurance ,t.free_shipping_admin,
-                            t.pmstar_admin,t.gift_cost,t.total_profit  FROM transactions t order by t.date desc limit 5''')
-    col_names = [description[0] for description in cursor.description]
-    latest_transactions = cursor.fetchall()
-    conn.close()
-    return render_template('home.html', rows=latest_transactions, columns=col_names)
-
-
 @app.route('/login')
 def login():
     return render_template('login.html')
@@ -149,6 +136,80 @@ def unauthorized_handler():
     return redirect(url_for('login'))
 
 
+@app.route('/home')
+@flask_login.login_required
+def home():
+    conn = get_db_connection()
+    cursor = conn.execute('''SELECT t.transaction_id,t.date,t.buyer_name,t.via,t.total,t.transaction_type,
+                            t.payment_via,t.shipping_cost,t.packing_cost,t.insurance ,t.free_shipping_admin,
+                            t.pmstar_admin,t.gift_cost,t.total_profit  FROM transactions t order by t.date desc limit 5''')
+    col_names = [description[0] for description in cursor.description]
+    latest_transactions = cursor.fetchall()
+    conn.close()
+    return render_template('home.html', rows=latest_transactions, columns=col_names)
+
+@app.route('/transactions_view/<transactionid>')
+@flask_login.login_required
+def transactions_view(transactionid):
+    conn = get_db_connection()
+    sql_trans = '''SELECT t.transaction_id,t.date,t.buyer_name,t.via,t.total,t.transaction_type,
+                                    t.payment_via,t.shipping_cost,t.packing_cost,t.insurance ,t.free_shipping_admin,
+                                    t.pmstar_admin,t.gift_cost,t.total_profit  FROM transactions t where t.transaction_id = {}'''.format(
+        transactionid)
+    cursor = conn.execute(sql_trans)
+
+    data_trans = cursor.fetchall()[0]
+    sql_detail = """
+        SELECT td.transaction_detail_id, p.product_name , td.amount, td.sell_price,td.total, td.profit  
+        from transactions_detail td 
+        join products p on td.product_id = p.product_id  
+        where transaction_id  = {}
+            """.format(transactionid)
+
+    cursor = conn.execute(sql_detail)
+    col_names_detail = [description[0] for description in cursor.description]
+    data_detail = cursor.fetchall()
+
+    data = {"data_trans": data_trans,
+            "data_detail": data_detail,
+            "col_names_detail": col_names_detail}
+
+    conn.close()
+
+    return render_template('transactions_view.html', data=data)
+
+@app.route('/transactions',methods=['POST'])
+@flask_login.login_required
+def transactions():
+    try:
+        transaction_id = request.form['transactionid']
+        conn = get_db_connection()
+        sql_trans = '''SELECT t.transaction_id,t.date,t.buyer_name,t.via,t.total,t.transaction_type,
+                                t.payment_via,t.shipping_cost,t.packing_cost,t.insurance ,t.free_shipping_admin,
+                                t.pmstar_admin,t.gift_cost,t.total_profit  FROM transactions t where t.transaction_id = {}'''.format(transaction_id)
+        cursor = conn.execute(sql_trans)
+        data_trans = cursor.fetchall()[0]
+        sql_detail = """
+        SELECT td.transaction_detail_id, td.product_id, td.amount, td.sell_price,td.total, td.profit  
+        from transactions_detail td  where transaction_id  = {} 
+        """.format(transaction_id)
+        cursor = conn.execute(sql_detail)
+        col_names_detail = [description[0] for description in cursor.description]
+        data_detail = cursor.fetchall()
+
+
+        data = {"data_trans" : data_trans,
+                "data_detail" : data_detail,
+                "col_names_detail" : col_names_detail}
+
+        conn.close()
+
+    except Exception as e:
+        data = None
+
+    return render_template('transactions.html',data=data)
+
+
 @app.route('/transactions_input', methods=['POST'])
 @flask_login.login_required
 def transactions_input():
@@ -172,7 +233,6 @@ def transactions_input():
     except:
         transaction_id = None
 
-    print(transaction_id)
     conn = get_db_connection()
 
     userid = conn.execute('SELECT u.user_id FROM users u where username = "{}"'.format(flask_login.current_user.username)).fetchall()
@@ -185,6 +245,17 @@ def transactions_input():
         values ("{}",{},"{}","{}",{},{},{},{},{},{},"{}","{}",{},{})'''.format(date,total,buyername,via,shippingcost,packingcost,
                                                                             insurance,freeshippingadmin,pmstaradmin,giftcost,
                                                                             paymentvia,transactiontype,totalprofit,userid)
+
+        conn.execute(sql)
+        conn.commit()
+        row_id = conn.execute('SELECT last_insert_rowid() as last_row').fetchall()[0]['last_row']
+
+        sql_row = """
+        select transaction_id from transactions where rowid={}
+        """.format(row_id)
+
+        transaction_id = conn.execute(sql_row).fetchall()[0]['transaction_id']
+
     else:
         sql = ''' UPDATE transactions
             SET 
@@ -207,12 +278,15 @@ def transactions_input():
                     insurance,freeshippingadmin,pmstaradmin,giftcost,
                     paymentvia,transactiontype,totalprofit,userid,transaction_id)
 
-    print(sql)
-    conn.execute(sql)
-    conn.commit()
+        conn.execute(sql)
+        conn.commit()
+
+
+
     conn.close()
 
-    return redirect(url_for('home'))
+    return redirect(url_for("transactions_view", transactionid=transaction_id))
+
 
 @app.route('/transactions_search', methods=['POST'])
 @flask_login.login_required
@@ -234,12 +308,6 @@ def transactions_search():
     conn.close()
     return render_template('home.html', rows=latest_transactions, columns=col_names)
 
-
-@app.route('/transactions_edit')
-@flask_login.login_required
-def transactions_edit():
-    return render_template('transactions_edit.html', col_names=None, data=None)
-
 @app.route('/transactions_delete' ,methods=['POST'])
 @flask_login.login_required
 def transactions_delete():
@@ -252,27 +320,9 @@ def transactions_delete():
     return redirect(url_for('home'))
 
 
-@app.route('/transactions_update', methods=['POST'])
+@app.route('/transaction_detail',methods=["POST"])
 @flask_login.login_required
-def transactions_update():
-    transaction_id = request.form['updateid']
-
-    conn = get_db_connection()
-    sql = '''SELECT t.transaction_id,t.date,t.buyer_name,t.via,t.total,t.transaction_type,
-                                        t.payment_via,t.shipping_cost,t.packing_cost,t.insurance,
-                                        t.free_shipping_admin,t.pmstar_admin,t.gift_cost,t.total_profit  
-                                        FROM transactions t where t.transaction_id = {}
-                                        order by t.date desc limit 1'''.format(transaction_id)
-
-    cursor = conn.execute(sql)
-    col_names = [description[0] for description in cursor.description]
-    data = cursor.fetchall()[0]
-    conn.close()
-    return render_template('transactions_edit.html', col_names=col_names, data=data)
-
-@app.route('/product_detail_edit')
-@flask_login.login_required
-def product_detail_edit():
+def transaction_detail():
     conn = get_db_connection()
     sql = '''
     select b.brand_name from brands b
@@ -280,9 +330,89 @@ def product_detail_edit():
     cursor = conn.execute(sql)
     brand_result = cursor.fetchall()
     brand_result = [x[0] for x in brand_result]
+    transaction_id = request.form.get('transactionid')
+
+    try:
+        transaction_detail_id = request.form['transactiondetailid']
+        sql_detail = """
+            select td.transaction_detail_id ,b.brand_name,p.product_name , td.amount, td.sell_price, td.total, td.profit  
+            from transactions_detail td 
+            join products p
+            on td.product_id = p.product_id 
+            join brands b
+            on p.brand_id  = b.brand_id 
+            where td.transaction_detail_id = {}
+        """.format(transaction_detail_id)
+        cursor = conn.execute(sql_detail)
+        col_names_detail = [description[0] for description in cursor.description]
+        data_detail = cursor.fetchall()[0]
+
+        data = {
+            "data_detail": data_detail,
+            "col_names_detail": col_names_detail
+        }
+    except:
+        data = None
+
+    conn.close()
+    return render_template('transaction_detail.html',data=data,brand_result=brand_result,transaction_id=transaction_id)
+
+
+@app.route('/transaction_detail_input',methods=["POST"])
+@flask_login.login_required
+def transaction_detail_input():
+
+    transaction_id = request.form['transactionid']
+    brand_name = request.form['brandname']
+    product_name = request.form['productname']
+    product_amount = request.form['productamount']
+    product_sell_price = request.form['productsellprice']
+    product_total = request.form['producttotal']
+    product_profit = request.form['productprofit']
+    try:
+        transaction_detail_id = request.form['transactiondetailid']
+
+        sql =''' UPDATE transactions_detail
+        SET product_id = (select p.product_id from products p 
+        join brands b
+        on p.brand_id = b.brand_id 
+        where p.product_name = "{}" and b.brand_name = "{}"),
+        amount = {},
+        sell_price = {},
+        total = {},
+        profit = {}
+        where transaction_detail_id = {}'''.format(product_name,brand_name,product_amount,
+                                                   product_sell_price,product_total,product_profit,transaction_detail_id)
+    except:
+        sql = """
+        insert into transactions_detail(product_id,transaction_id,amount,sell_price,total,profit) 
+        values ((select p.product_id from products p 
+        join brands b
+        on p.brand_id = b.brand_id 
+        where p.product_name = "{}" and b.brand_name = "{}"),{},{},{},{},{})
+        """.format(product_name,brand_name,transaction_id,product_amount,product_sell_price,product_total,product_profit)
+
+    conn = get_db_connection()
+    conn.execute(sql)
+    conn.commit()
     conn.close()
 
-    return render_template('product_detail_edit.html',data=None,brand_result=brand_result)
+    return redirect(url_for("transactions_view",transactionid=transaction_id))
+
+
+@app.route('/transactions_detail_delete' ,methods=['POST'])
+@flask_login.login_required
+def transactions_detail_delete():
+    transaction_id = request.form['transactionid']
+    transaction_detail_id = request.form['transactiondetailid']
+    conn = get_db_connection()
+    sql  = """
+    DELETE FROM transactions_detail as t where t.transaction_detail_id = {}
+    """.format(transaction_detail_id)
+    conn.execute(sql)
+    conn.commit()
+    conn.close()
+    return redirect(url_for("transactions_view",transactionid=transaction_id))
 
 @app.route('/get_product/<brand>', methods=['GET'])
 @flask_login.login_required
