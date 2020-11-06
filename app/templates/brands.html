@@ -1,0 +1,33 @@
+{% extends "layout_main.html" %}
+{% block content %}
+<section>
+    <form method="POST" action="/brands_input">
+        <div class="columns">
+            <div class="column is-4"></div>
+                <div class="container">
+                    <table class="table">
+                         <tr>
+                            <td>{% if data %}<label class="label">Brand ID</label>{%endif%}</td>
+                            <td>{% if data %}<input class="input is-primary" type="text" name="brandid" value="{{ data['data_brand']['brand_id'] }}" readonly>{%endif%}</td>
+                        </tr>
+                        <tr>
+                            <td><label class="label">Brand Name</label></td>
+                            <td><input class="input" type="text" name="brandname" value="{{ data['data_brand']['brand_name'] if data != None else '' }}"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="column is-4"></div>
+        </div>
+        <br>
+        <div class="columns">
+            <div class="column is-4"></div>
+            <div class="column">
+                <div class="control">
+                    <button type="submit" class="button is-primary  is-centered">{{ "Update" if data != None else "Add" }}</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</section>
+{% endblock %}

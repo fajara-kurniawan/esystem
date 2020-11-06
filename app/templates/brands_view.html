@@ -1,0 +1,100 @@
+{% extends "layout_main.html" %}
+{% block content %}
+<section>
+    <div class="container">
+        <div class="columns">
+            <div class="column is-4"></div>
+            <div class="column">
+                <div class="container">
+                    <table class="table">
+                        <tr>
+                            <td><label class="label">Brand ID</label></td>
+                            <td><input class="input is-primary" type="text" name="brandid" value="{{ data['data_brand']['brand_id'] }}" disabled></td>
+                        </tr>
+                        <tr>
+                            <td><label class="label">Brand Name</label></td>
+                            <td><input class="input is-primary" type="text" name="brandname" value="{{ data['data_brand']['brand_name'] }}" disabled></td>
+                        </tr>
+                        <tr>
+                            <td><label class="label">No. Of Products</label></td>
+                            <td><input class="input is-primary" type="text" name="noofproducts" value="{{ data['data_brand']['number_of_products'] }}" disabled></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="column is-4"></div>
+        </div>
+    </div>
+</section>
+<br>
+<br>
+<section>
+    <div class="container">
+        <div class="columns">
+            <div class="column is-4"></div>
+            <div class="column">
+                <form method="POST" action="/brands" class="control">
+                    <input type="hidden" value="{{ data['data_brand']['brand_id'] }}" name="brandid"/>
+                    <button class="button is-primary is-medium">Edit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+<br>
+<br>
+<section>
+    <div class="container">
+        <div class="columns">
+            <div class="column is-4"></div>
+            <div class="column">
+                <h2 class="title is-bold">Products Detail</h2>
+                {%if not data['data_product']%}
+                <h2 class="subtitle is-bold">No Product Yet</h2>
+                {%endif%}
+            </div>
+            <div class="column is-4"></div>
+        </div>
+    </div>
+    <div class="container">
+              {% for row in data['data_product'] %}
+        <div class="columns">
+            <div class="column is-4"></div>
+            <div class="column">
+                    <div class="container">
+                        <div class="tile is-parent">
+                          <article class="tile is-child notification is-info">
+                          </article>
+                        </div>
+                        <table class="table">
+                            <tr>
+                                <td><label class="label">Product Name</label></td>
+                                <td><input class="input is-primary" type="text" name="productname" value="{{ row['product_name'] }}" disabled></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            <div class="column is-4"></div>
+        </div>
+        <div class="columns">
+            <div class="column is-4"></div>
+            <div class="column">
+                <div class="field is-grouped">
+                <form method="POST" action="/product" class="control">
+                    <input type="hidden" value="{{ row['product_id'] }}" name="productid"/>
+                    <input type="hidden" value="{{ data['data_brand']['brand_id'] }}" name="brandid"/>
+                    <button class="button is-primary">Update</button>
+                </form>
+                <form method="POST" action="/product_delete" class="control">
+                    <input type="hidden" value="{{ row['product_id'] }}" name="productid"/>
+                    <input type="hidden" value="{{ data['data_brand']['brand_id'] }}" name="brandid"/>
+                    <button class="button is-danger">Delete</button>
+                </form>
+                </div>
+            </div>
+            <div class="column"></div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

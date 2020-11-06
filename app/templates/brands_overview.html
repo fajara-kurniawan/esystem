@@ -1,0 +1,58 @@
+{% extends "layout_main.html"%}
+{% block content%}
+<section>
+    <div class="container">
+        <div class="columns">
+            <div class="column is-3"></div>
+            <div class="column">
+                <div class="table-container">
+                    <table class="table is-fullwidth">
+                        <thead>
+                          <tr>
+                          {% for col in data['brands_col'] %}
+                              <th>{{ col.replace("_"," ").title() }}</th>
+                          {% endfor %}
+                          </tr>
+                            </thead>
+                            <tbody>
+                          {% for row in data['brands_data'] %}
+                          <tr>
+                            {% for col in data['brands_col'] %}
+                              <td>{{ row[col] }}</td>
+                            {% endfor %}
+                              <td>
+                                  <a class="button is-info is-small" href='{{"/brands_view/{}".format(row["brand_id"])}}'>detail</a>
+                              </td>
+                              <td>
+                                  <form method="POST" action="/brands_delete" >
+                                    <input type="hidden" value="{{ row['brand_id'] }}" name="deleteid"/>
+                                    <button class="button is-danger is-small">Delete</button>
+                                  </form>
+                              </td>
+                          </tr>
+                          {% endfor %}
+                    </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="column is-3"></div>
+        </div>
+    </div>
+</section>
+<br>
+<br>
+<section>
+    <div class="container">
+        <div class="columns">
+            <div class="column is-8"></div>
+            <div class="column">
+                <form method="POST" action="/brands" >
+                    <button type="submit" class="button is-primary">
+                        Add Brands
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

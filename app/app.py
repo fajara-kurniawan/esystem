@@ -432,3 +432,150 @@ def get_product(brand):
     else:
         return jsonify(product_result)
 
+
+@app.route('/brands_overview')
+@flask_login.login_required
+def brands_overview():
+    conn = get_db_connection()
+    sql = '''SELECT b.brand_id,b.brand_name,p.number_of_products
+    from brands b left join 
+    ( select p.brand_id, count(*) as number_of_products from products p group by p.brand_id) p
+    on b.brand_id = p.brand_id  
+    where b.is_deleted = 0
+    '''
+    cursor = conn.execute(sql)
+    col_names = [description[0] for description in cursor.description]
+    brands_data = cursor.fetchall()
+    data = {
+        "brands_data": brands_data,
+        "brands_col": col_names
+    }
+    conn.close()
+    return render_template('brands_overview.html', data=data)
+
+@app.route('/brands_view/<brandid>')
+@flask_login.login_required
+def brands_view(brandid):
+    conn = get_db_connection()
+
+    sql_brands = '''
+    SELECT b.brand_id,b.brand_name,p.number_of_products
+    from brands b left join 
+    ( select p.brand_id, count(*) as number_of_products from products p group by p.brand_id) p
+    on b.brand_id = p.brand_id 
+    where b.brand_id = '{}'
+    '''.format(brandid)
+    cursor = conn.execute(sql_brands)
+    data_brand = cursor.fetchall()[0]
+
+    try:
+        sql_products = '''
+        SELECT p.product_id,p.product_name from products p where p.brand_id = '{}'
+        '''.format(brandid)
+
+        cursor = conn.execute(sql_products)
+        data_product = cursor.fetchall()
+    except:
+        data_product = None
+
+    data = {"data_brand": data_brand,
+            "data_product": data_product}
+
+    conn.close()
+
+    return render_template('brands_view.html', data=data)
+
+@app.route('/brands',methods=['POST'])
+@flask_login.login_required
+def brands():
+    try:
+        brandid = request.form['brandid']
+        conn = get_db_connection()
+
+        sql_brand = '''
+        SELECT b.brand_id,b.brand_name from brands b where b.brand_id = '{}'
+        '''.format(brandid)
+
+        cursor = conn.execute(sql_brand)
+        data_brand = cursor.fetchall()[0]
+        data = {"data_brand" : data_brand}
+        conn.close()
+
+    except Exception as e:
+        data = None
+
+    return render_template('brands.html',data=data)
+
+@app.route('/brands_input',methods=["POST"])
+@flask_login.login_required
+def brands_input():
+    brand_name = request.form['brandname']
+    conn = get_db_connection()
+    try:
+        brandid = request.form['brandid']
+
+        sql_update =''' UPDATE brands
+        SET brand_name = '{}'
+        where brand_id = '{}'
+        '''.format(brand_name,brandid)
+        conn.execute(sql_update)
+        conn.commit()
+    except Exception as e:
+        print(e)
+        is_success = False
+        while not is_success:
+            sql_getid = """
+            SELECT b.brand_id from brands b order by b.brand_id desc limit 1
+            """
+            cursor = conn.execute(sql_getid)
+            brand_oldid = cursor.fetchall()[0]['brand_id']
+            old_id = list(brand_oldid)
+            old_id.reverse()
+            add = True
+            res = []
+            for k in range(0, len(old_id)):
+                number = int(old_id[k])
+                if add:
+                    number = number + 1
+                    if number < 10:
+                        add = False
+                        res.append(str(number))
+                    else:
+                        list_number = list(str(number))
+                        res.append(str(list_number[-1]))
+                else:
+                    res.append(str(number))
+            res.reverse()
+            brandid = ''.join(res)
+
+            try:
+                sql_insert = """
+                insert into brands(brand_id,brand_name)
+                values ('{}','{}')
+                """.format(brandid,brand_name)
+                conn.execute(sql_insert)
+                conn.commit()
+                is_success = True
+            except:
+                pass
+    conn.close()
+
+    return redirect(url_for("brands_view", brandid=brandid))
+
+
+@app.route('/brands_delete' ,methods=['POST'])
+@flask_login.login_required
+def brands_delete():
+    delete_id = request.form['deleteid']
+
+    conn = get_db_connection()
+    sql = """
+    UPDATE brands
+    SET is_deleted = 1
+    WHERE brand_id = '{}'
+    """.format(delete_id)
+
+    conn.execute(sql)
+    conn.commit()
+    conn.close()
+    return redirect(url_for("brands_overview"))
