@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Flask Auth Example</title>
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/bulma.css') }}">
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+</head>
+
+<body>
+    <div class="hero-head">
+        <nav class="navbar">
+            <div class="container">
+                    <div class="navbar-end">
+                        <a href="{{ url_for('home') }}" class="navbar-item">
+                            Home
+                        </a>
+                        <a href="{{ url_for('transaction_overview') }}" class="navbar-item">
+                            Transactions
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="navbar-item">
+                            Logout
+                        </a>
+                    </div>
+            </div>
+        </nav>
+    </div>
+
+    <section>
+        <div class="hero">
+          <div class="hero-body">
+            <div class="container has-text-centered">
+              <h1 class="title">
+                  Elastic.Beauties
+              </h1>
+              <h2 class="subtitle">
+                eSystem for Inventory Applications
+              </h2>
+            </div>
+          </div>
+        </div>
+    </section>
+       {% block content %}
+       {% endblock %}
+</body>
+
+</html>

@@ -1,217 +1,173 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Elastic Beauties</title>
-    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/bulma.css') }}">
-</head>
-
-    <body>
-
-            <nav class="navbar">
+{% extends "layout_main.html" %}
+{% block content %}
+<section>
+    <div class="container">
+        <div class="container">
+            <div class="columns">
+                <div class="column is-2"></div>
+                <div class="column">
+                    <h2 class="title is-4 is-bold">Transaction Detail</h2>
+                </div>
+                <div class="column"></div>
+        </div>
+            <br>
+        <div class="columns">
+            <div class="column is-2"></div>
+            <div class="column">
                 <div class="container">
-                        <div class="navbar-end">
-                            <a href="{{ url_for('home') }}" class="navbar-item">
-                                Home
-                            </a>
-                            <a href="{{ url_for('logout') }}" class="navbar-item">
-                                Logout
-                            </a>
-                        </div>
+                    <table class="table">
+                        <tr>
+                            <td><label class="label">Transaction ID</label></td>
+                            <td><input class="input is-primary" type="text" name="transactionid" value="{{ data['data_trans']['transaction_id'] }}" disabled></td>
+                            <td><label class="label">Shipping Cost</label></td>
+                            <td><input class="input is-primary" type="text" name="shippingcost"  value="{{ data['data_trans']['shipping_cost'] if data != None else 0 }}" disabled></td>
+                        </tr>
+                        <tr>
+                            <td><label class="label">Date</label></td>
+                            <td><input class="input is-primary" type="text" name="date" value="{{ data['data_trans']['date'] }}" disabled></td>
+                            <td><label class="label">Packing Cost</label></td>
+                            <td><input class="input is-primary" type="text" name="packingcost" value="{{ data['data_trans']['packing_cost'] }}" disabled></td>
+                        </tr>
+                        <tr>
+                            <td><label class="label">Total</label></td>
+                            <td><input class="input is-primary" type="text" name="total" value="{{ data['data_trans']['total'] }}" disabled></td>
+                            <td><label class="label">Insurance</label></td>
+                            <td><input class="input is-primary" type="text" name="insurance" value="{{ data['data_trans']['insurance'] }}" disabled></td>
+                        </tr>
+                        <tr>
+                            <td><label class="label">Buyer Name</label></td>
+                            <td><input class="input is-primary" type="text" name="buyername" value="{{ data['data_trans']['buyer_name'] }}" disabled></td>
+                            <td><label class="label">Free Shipping Admin</label></td>
+                            <td><input class="input is-primary" type="text" name="freeshippingadmin" value="{{ data['data_trans']['free_shipping_admin'] }}" disabled></td>
+                        </tr>
+                        <tr>
+                            <td><label class="label">Via</label></td>
+                            <td><input class="input is-primary" type="text" name="via" value="{{ data['data_trans']['via'] }}" disabled></td>
+                            <td><label class="label">PM/Star Admin</label></td>
+                            <td><input class="input is-primary" type="text" name="pmstaradmin" value="{{ data['data_trans']['pmstar_admin'] }}" disabled></td>
+                        </tr>
+                        <tr>
+                            <td><label class="label">Payment Via</label></td>
+                            <td><input class="input is-primary" type="text" name="paymentvia" value="{{ data['data_trans']['payment_via'] }}" disabled></td>
+                            <td><label class="label">Gift Cost</label></td>
+                            <td><input class="input is-primary" type="text" name="giftcost" value="{{ data['data_trans']['gift_cost'] }}" disabled></td>
+                        </tr>
+                        <tr>
+                            <td><label class="label">Transaction Type</label></td>
+                            <td><input class="input is-primary" type="text" name="transactiontype" value="{{ data['data_trans']['transaction_type'] }}" disabled></td>
+                            <td><label class="label">Total Profit</label></td>
+                            <td><input class="input is-primary" type="text" name="totalprofit" value="{{ data['data_trans']['total_profit'] }}" disabled></td>
+                        </tr>
+                    </table>
                 </div>
-            </nav>
-       <section>
-                <div class="hero">
-                  <div class="hero-body">
-                    <div class="container has-text-centered">
-                      <h1 class="title">
-                          Elastic.Beauties
-                      </h1>
-                      <h2 class="subtitle">
-                        eSystem for Inventory Applications
-                      </h2>
-                    </div>
-                  </div>
-                </div>
-        </section>
-            {% block content %}
-    <section>
-            <div class="container">
-                <div class="container">
-                    <div class="columns">
-                        <div class="column is-2"></div>
-                        <div class="column">
-                            <h2 class="title is-4 is-bold">Transaction Detail</h2>
-                        </div>
-                        <div class="column"></div>
-                </div>
-                    <br>
-                <div class="columns">
-                    <div class="column is-2"></div>
-                    <div class="column">
+
+            </div>
+            <div class="column is-2"></div>
+        </div>
+    </div>
+</section>
+<br>
+<br>
+<section>
+    <div class="container">
+        <div class="columns">
+            <div class="column is-2"></div>
+            <div class="column">
+                <form method="POST" action="/transactions" class="control">
+                    <input type="hidden" value="{{ data['data_trans']['transaction_id'] }}" name="transactionid"/>
+                    <button class="button is-primary is-medium">Edit</button>
+                </form>
+            </div>
+            <div class="column is-2"></div>
+        </div>
+    </div>
+</section>
+<br>
+<br>
+<section>
+    <div class="container">
+        <div class="columns">
+            <div class="column is-2"></div>
+            <div class="column">
+                <h2 class="title is-bold is-4">Product Sold Detail</h2>
+                {%if not data['data_detail']%}
+                <h2 class="subtitle is-bold">No Detail Yet</h2>
+                {%endif%}
+            </div>
+            <div class="column"></div>
+        </div>
+
+    </div>
+    <div class="container">
+        {% for row in data['data_detail'] %}
+        <div class="columns">
+            <div class="column is-2"></div>
+            <div class="column">
                         <div class="container">
+                            <div class="tile is-parent">
+                              <article class="tile is-child notification is-info">
+                              </article>
+                            </div>
                             <table class="table">
                                 <tr>
-                                    <td><label class="label">Transaction ID</label></td>
-                                    <td><input class="input is-primary" type="text" name="transactionid" value="{{ data['data_trans']['transaction_id'] }}" disabled></td>
-                                    <td><label class="label">Shipping Cost</label></td>
-                                    <td><input class="input is-primary" type="text" name="shippingcost"  value="{{ data['data_trans']['shipping_cost'] if data != None else 0 }}" disabled></td>
+                                    <td><label class="label">Product Name</label></td>
+                                    <td><input class="input is-primary" type="text" name="productname" value="{{ row['product_name'] }}" disabled></td>
+                                    <td><label class="label">Sell Price</label></td>
+                                    <td><input class="input is-primary" type="text" name="sellprice" value="{{ row['sell_price'] }}" disabled></td>
                                 </tr>
                                 <tr>
-                                    <td><label class="label">Date</label></td>
-                                    <td><input class="input is-primary" type="text" name="date" value="{{ data['data_trans']['date'] }}" disabled></td>
-                                    <td><label class="label">Packing Cost</label></td>
-                                    <td><input class="input is-primary" type="text" name="packingcost" value="{{ data['data_trans']['packing_cost'] }}" disabled></td>
-                                </tr>
-                                <tr>
+                                    <td><label class="label">Amount</label></td>
+                                    <td><input class="input is-primary" type="text" name="amount" value="{{ row['amount'] }}" disabled></td>
                                     <td><label class="label">Total</label></td>
-                                    <td><input class="input is-primary" type="text" name="total" value="{{ data['data_trans']['total'] }}" disabled></td>
-                                    <td><label class="label">Insurance</label></td>
-                                    <td><input class="input is-primary" type="text" name="insurance" value="{{ data['data_trans']['insurance'] }}" disabled></td>
+                                    <td><input class="input is-primary" type="text" name="total" value="{{ row['total'] }}" disabled></td>
                                 </tr>
                                 <tr>
-                                    <td><label class="label">Buyer Name</label></td>
-                                    <td><input class="input is-primary" type="text" name="buyername" value="{{ data['data_trans']['buyer_name'] }}" disabled></td>
-                                    <td><label class="label">Free Shipping Admin</label></td>
-                                    <td><input class="input is-primary" type="text" name="freeshippingadmin" value="{{ data['data_trans']['free_shipping_admin'] }}" disabled></td>
-                                </tr>
-                                <tr>
-                                    <td><label class="label">Via</label></td>
-                                    <td><input class="input is-primary" type="text" name="via" value="{{ data['data_trans']['via'] }}" disabled></td>
-                                    <td><label class="label">PM/Star Admin</label></td>
-                                    <td><input class="input is-primary" type="text" name="pmstaradmin" value="{{ data['data_trans']['pmstar_admin'] }}" disabled></td>
-                                </tr>
-                                <tr>
-                                    <td><label class="label">Payment Via</label></td>
-                                    <td><input class="input is-primary" type="text" name="paymentvia" value="{{ data['data_trans']['payment_via'] }}" disabled></td>
-                                    <td><label class="label">Gift Cost</label></td>
-                                    <td><input class="input is-primary" type="text" name="giftcost" value="{{ data['data_trans']['gift_cost'] }}" disabled></td>
-                                </tr>
-                                <tr>
-                                    <td><label class="label">Transaction Type</label></td>
-                                    <td><input class="input is-primary" type="text" name="transactiontype" value="{{ data['data_trans']['transaction_type'] }}" disabled></td>
-                                    <td><label class="label">Total Profit</label></td>
-                                    <td><input class="input is-primary" type="text" name="totalprofit" value="{{ data['data_trans']['total_profit'] }}" disabled></td>
+                                    <td><label class="label">Profit</label></td>
+                                    <td><input class="input is-primary" type="text" name="profit" value="{{ row['profit'] }}" disabled></td>
+                                    <td></td>
+                                    <td>
+                                    </td>
                                 </tr>
                             </table>
                         </div>
-
-                    </div>
-                    <div class="column is-2"></div>
                 </div>
-            </div>
-
-    </section>
-           <br>
-            <br>
-            <section>
-                <div class="container">
-                    <div class="columns">
-                        <div class="column is-2"></div>
-                        <div class="column">
-                            <form method="POST" action="/transactions" class="control">
-                                <input type="hidden" value="{{ data['data_trans']['transaction_id'] }}" name="transactionid"/>
-                                <button class="button is-primary is-medium">Edit</button>
-                            </form>
-                        </div>
-                        <div class="column is-2"></div>
-                    </div>
-                </div>
-
-            </section>
-                  {% endblock %}
-            <br>
-            <br>
-    <section>
-        {% block content_detail %}
-        <div class="container">
-            <div class="columns">
-                <div class="column is-2"></div>
-                <div class="column">
-                    <h2 class="title is-bold is-4">Product Sold Detail</h2>
-                    {%if not data['data_detail']%}
-                    <h2 class="subtitle is-bold">No Detail Yet</h2>
-                    {%endif%}
-                </div>
-                <div class="column"></div>
-            </div>
-
+            <div class="column is-2"></div>
         </div>
-        <div class="container">
-            {% for row in data['data_detail'] %}
-            <div class="columns">
-                <div class="column is-2"></div>
-                <div class="column">
-                            <div class="container">
-                                <div class="tile is-parent">
-                                  <article class="tile is-child notification is-info">
-                                  </article>
-                                </div>
-                                <table class="table">
-                                    <tr>
-                                        <td><label class="label">Product Name</label></td>
-                                        <td><input class="input is-primary" type="text" name="productname" value="{{ row['product_name'] }}" disabled></td>
-                                        <td><label class="label">Sell Price</label></td>
-                                        <td><input class="input is-primary" type="text" name="sellprice" value="{{ row['sell_price'] }}" disabled></td>
-                                    </tr>
-                                    <tr>
-                                        <td><label class="label">Amount</label></td>
-                                        <td><input class="input is-primary" type="text" name="amount" value="{{ row['amount'] }}" disabled></td>
-                                        <td><label class="label">Total</label></td>
-                                        <td><input class="input is-primary" type="text" name="total" value="{{ row['total'] }}" disabled></td>
-                                    </tr>
-                                    <tr>
-                                        <td><label class="label">Profit</label></td>
-                                        <td><input class="input is-primary" type="text" name="profit" value="{{ row['profit'] }}" disabled></td>
-                                        <td></td>
-                                        <td>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                    </div>
-                <div class="column is-2"></div>
-            </div>
-            <div class="columns">
-                <div class="column is-2"></div>
-                <div class="column is-3">
-                    <div class="field is-grouped">
-                    <form method="POST" action="/transaction_detail" class="control">
-                        <input type="hidden" value="{{ row['transaction_detail_id'] }}" name="transactiondetailid"/>
-                        <input type="hidden" value="{{ data['data_trans']['transaction_id'] }}" name="transactionid"/>
-                        <button class="button is-primary">Update</button>
-                    </form>
-                    <form method="POST" action="/transactions_detail_delete" class="control">
-                        <input type="hidden" value="{{ row['transaction_detail_id'] }}" name="transactiondetailid"/>
-                        <input type="hidden" value="{{ data['data_trans']['transaction_id'] }}" name="transactionid"/>
-                        <button class="button is-danger">Delete</button>
-                    </form>
-                    </div>
+        <div class="columns">
+            <div class="column is-2"></div>
+            <div class="column is-3">
+                <div class="field is-grouped">
+                <form method="POST" action="/transaction_detail" class="control">
+                    <input type="hidden" value="{{ row['transaction_detail_id'] }}" name="transactiondetailid"/>
+                    <input type="hidden" value="{{ data['data_trans']['transaction_id'] }}" name="transactionid"/>
+                    <button class="button is-primary">Update</button>
+                </form>
+                <form method="POST" action="/transactions_detail_delete" class="control">
+                    <input type="hidden" value="{{ row['transaction_detail_id'] }}" name="transactiondetailid"/>
+                    <input type="hidden" value="{{ data['data_trans']['transaction_id'] }}" name="transactionid"/>
+                    <button class="button is-danger">Delete</button>
+                </form>
                 </div>
-                <div class="column"></div>
             </div>
-            {% endfor %}
+            <div class="column"></div>
         </div>
-        {% endblock %}
-    </section>
-            <br>
-            <br>
-    <section>
-        <div class="container">
-            <div class="columns">
-                <div class="column is-2"></div>
-                <div class="column">
-                    <form method="POST" action="/transaction_detail" class="control">
-                        <input type="hidden" value="{{ data['data_trans']['transaction_id'] }}" name="transactionid"/>
-                        <button class="button is-primary is-medium">Add Product</button>
-                    </form>
-                </div>
-                <div class="column is-2"></div>
+        {% endfor %}
+    </div>
+</section>
+<br>
+<br>
+<section>
+    <div class="container">
+        <div class="columns">
+            <div class="column is-2"></div>
+            <div class="column">
+                <form method="POST" action="/transaction_detail" class="control">
+                    <input type="hidden" value="{{ data['data_trans']['transaction_id'] }}" name="transactionid"/>
+                    <button class="button is-primary is-medium">Add Product</button>
+                </form>
             </div>
+            <div class="column is-2"></div>
         </div>
-    </section>
-    </body>
-</html>
+    </div>
+</section>
+{% endblock %}

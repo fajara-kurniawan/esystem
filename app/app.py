@@ -139,14 +139,20 @@ def unauthorized_handler():
 @app.route('/home')
 @flask_login.login_required
 def home():
+    return render_template("home.html")
+
+@app.route('/transaction_overview')
+@flask_login.login_required
+def transaction_overview():
     conn = get_db_connection()
     cursor = conn.execute('''SELECT t.transaction_id,t.date,t.buyer_name,t.via,t.total,t.transaction_type,
                             t.payment_via,t.shipping_cost,t.packing_cost,t.insurance ,t.free_shipping_admin,
-                            t.pmstar_admin,t.gift_cost,t.total_profit  FROM transactions t order by t.date desc limit 5''')
+                            t.pmstar_admin,t.gift_cost,t.total_profit  FROM transactions t where is_deleted = 0 
+                            order by t.date desc limit 5''')
     col_names = [description[0] for description in cursor.description]
     latest_transactions = cursor.fetchall()
     conn.close()
-    return render_template('home.html', rows=latest_transactions, columns=col_names)
+    return render_template('transaction_overview.html', rows=latest_transactions, columns=col_names)
 
 @app.route('/transactions_view/<transactionid>')
 @flask_login.login_required
@@ -163,7 +169,7 @@ def transactions_view(transactionid):
         SELECT td.transaction_detail_id, p.product_name , td.amount, td.sell_price,td.total, td.profit  
         from transactions_detail td 
         join products p on td.product_id = p.product_id  
-        where transaction_id  = {}
+        where transaction_id  = {} and td.is_deleted = 0
             """.format(transactionid)
 
     cursor = conn.execute(sql_detail)
@@ -189,19 +195,7 @@ def transactions():
                                 t.pmstar_admin,t.gift_cost,t.total_profit  FROM transactions t where t.transaction_id = {}'''.format(transaction_id)
         cursor = conn.execute(sql_trans)
         data_trans = cursor.fetchall()[0]
-        sql_detail = """
-        SELECT td.transaction_detail_id, td.product_id, td.amount, td.sell_price,td.total, td.profit  
-        from transactions_detail td  where transaction_id  = {} 
-        """.format(transaction_id)
-        cursor = conn.execute(sql_detail)
-        col_names_detail = [description[0] for description in cursor.description]
-        data_detail = cursor.fetchall()
-
-
-        data = {"data_trans" : data_trans,
-                "data_detail" : data_detail,
-                "col_names_detail" : col_names_detail}
-
+        data = {"data_trans" : data_trans}
         conn.close()
 
     except Exception as e:
@@ -281,7 +275,7 @@ def transactions_input():
         conn.execute(sql)
         conn.commit()
 
-
+    print(sql)
 
     conn.close()
 
@@ -306,7 +300,7 @@ def transactions_search():
     latest_transactions = cursor.fetchall()
 
     conn.close()
-    return render_template('home.html', rows=latest_transactions, columns=col_names)
+    return render_template('transaction_overview.html', rows=latest_transactions, columns=col_names)
 
 @app.route('/transactions_delete' ,methods=['POST'])
 @flask_login.login_required
@@ -314,10 +308,15 @@ def transactions_delete():
     transaction_id = request.form['deleteid']
 
     conn = get_db_connection()
-    conn.execute('DELETE FROM transactions as t where t.transaction_id = {}'.format(transaction_id))
+    sql = """
+    UPDATE transactions
+    SET is_deleted = 1
+    WHERE transaction_id = {}
+    """.format(transaction_id)
+    conn.execute(sql)
     conn.commit()
     conn.close()
-    return redirect(url_for('home'))
+    return redirect(url_for('transaction_overview'))
 
 
 @app.route('/transaction_detail',methods=["POST"])
@@ -406,8 +405,10 @@ def transactions_detail_delete():
     transaction_id = request.form['transactionid']
     transaction_detail_id = request.form['transactiondetailid']
     conn = get_db_connection()
-    sql  = """
-    DELETE FROM transactions_detail as t where t.transaction_detail_id = {}
+    sql = """
+    UPDATE transactions_detail
+    SET is_deleted = 1
+    WHERE transaction_detail_id = {}
     """.format(transaction_detail_id)
     conn.execute(sql)
     conn.commit()
