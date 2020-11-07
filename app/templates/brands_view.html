@@ -80,13 +80,13 @@
             <div class="column is-4"></div>
             <div class="column">
                 <div class="field is-grouped">
-                <form method="POST" action="/product" class="control">
+                <form method="POST" action="/products" class="control">
                     <input type="hidden" value="{{ row['product_id'] }}" name="productid"/>
                     <input type="hidden" value="{{ data['data_brand']['brand_id'] }}" name="brandid"/>
                     <button class="button is-primary">Update</button>
                 </form>
-                <form method="POST" action="/product_delete" class="control">
-                    <input type="hidden" value="{{ row['product_id'] }}" name="productid"/>
+                <form method="POST" action="/products_delete" class="control">
+                    <input type="hidden" value="{{ row['product_id'] }}" name="deleteid"/>
                     <input type="hidden" value="{{ data['data_brand']['brand_id'] }}" name="brandid"/>
                     <button class="button is-danger">Delete</button>
                 </form>
@@ -95,6 +95,21 @@
             <div class="column"></div>
         </div>
         {% endfor %}
+    </div>
+</section>
+<br>
+<br>
+<section>
+    <div class="container">
+        <div class="columns">
+            <div class="column is-4"></div>
+            <div class="column">
+                <form method="POST" action="/products" class="control">
+                    <input type="hidden" value="{{ data['data_brand']['brand_id'] }}" name="brandid"/>
+                    <button class="button is-primary is-medium">Add Product</button>
+                </form>
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}

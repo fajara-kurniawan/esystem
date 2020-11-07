@@ -470,7 +470,7 @@ def brands_view(brandid):
 
     try:
         sql_products = '''
-        SELECT p.product_id,p.product_name from products p where p.brand_id = '{}'
+        SELECT p.product_id,p.product_name from products p where p.brand_id = '{}' and is_deleted = 0
         '''.format(brandid)
 
         cursor = conn.execute(sql_products)
@@ -579,3 +579,109 @@ def brands_delete():
     conn.commit()
     conn.close()
     return redirect(url_for("brands_overview"))
+
+@app.route('/products',methods=['POST'])
+def product():
+
+    
+    brand_id = request.form['brandid']
+    product_id = request.form.get('productid')
+    if product_id:
+        conn = get_db_connection()
+        sql = """
+        SELECT p.product_id, p.product_name from products p  where product_id = '{}'
+        """.format(product_id)
+
+        cursor = conn.execute(sql)
+
+        data_product = cursor.fetchall()[0]
+
+        data = {'data_product' : data_product,'brand_id' : brand_id}
+    else:
+        data = {'data_product' : None, 'brand_id' : brand_id}
+
+    return render_template("products.html",data = data)
+
+
+@app.route('/products_input', methods=['POST'])
+def product_input():
+    brand_id = request.form.get('brandid')
+    product_id = request.form.get("productid")
+    product_name = request.form.get("productname")
+    conn = get_db_connection()
+
+
+    if product_id:
+        sql_update = '''
+        UPDATE products 
+        set product_name = '{}'
+        where product_id = '{}'
+        '''.format(product_name,product_id)
+
+        conn.execute(sql_update)
+        conn.commit()
+    else:
+        is_success = False
+
+        while not is_success:
+            sql_getid = '''
+            select p.product_id from products p where p.brand_id = '{}' order by p.product_id desc limit 1
+            '''.format(brand_id)
+            cursor = conn.execute(sql_getid)
+            product_oldid = cursor.fetchall()[0]['product_id']
+            product_oldid = product_oldid[-3:]
+            if product_oldid:
+                old_id = list(product_oldid)
+                old_id.reverse()
+                add = True
+                res = []
+                for k in range(0, len(old_id)):
+                    number = int(old_id[k])
+                    if add:
+                        number = number + 1
+                        if number < 10:
+                            add = False
+                            res.append(str(number))
+                        else:
+                            list_number = list(str(number))
+                            res.append(str(list_number[-1]))
+                    else:
+                        res.append(str(number))
+                res.reverse()
+                product_id = '{}{}'.format(brand_id,''.join(res))
+            else:
+                product_id = "{}001".format(brand_id)
+            try:
+                sql_insert = """
+                insert into products(product_id,brand_id,product_name)
+                values ('{}','{}','{}')
+                """.format(product_id,brand_id,product_name)
+                conn.execute(sql_insert)
+                conn.commit()
+                is_success = True
+            except Exception as e:
+                print(e)
+                pass
+    conn.close()
+
+    return redirect(url_for("brands_view", brandid=brand_id))
+
+
+
+@app.route('/products_delete' ,methods=['POST'])
+@flask_login.login_required
+def products_delete():
+    delete_id = request.form.get('deleteid')
+    brand_id = request.form.get('brandid')
+    conn = get_db_connection()
+    sql = """
+    UPDATE products
+    SET is_deleted = 1
+    WHERE product_id = '{}'
+    """.format(delete_id)
+
+    conn.execute(sql)
+    conn.commit()
+    conn.close()
+    
+    return redirect(url_for("brands_view", brandid=brand_id))

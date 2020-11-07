@@ -1,0 +1,35 @@
+{% extends "layout_main.html" %}
+{% block content %}
+<section>
+    <form method="POST" action="/products_input">
+        <div class="columns">
+            <div class="column is-4"></div>
+                <div class="container">
+                    <table class="table">
+                         <tr>
+                            <td>{% if data['data_product'] %}<label class="label">Product ID</label>{%endif%}</td>
+                            <td>{% if data['data_product'] %}<input class="input is-primary" type="text" name="productid" value="{{ data['data_product']['product_id'] }}" readonly>{%endif%}</td>
+                        </tr>
+                        <tr>
+                            <td><label class="label">Product Name</label></td>
+                            <td><input class="input" type="text" name="productname" value="{{ data['data_product']['product_name'] if data != None else '' }}"></td>
+                        </tr>
+                    </table>
+                    <input type="hidden" name='brandid' value="{{data['brand_id']}}">
+                </div>
+            </div>
+            <div class="column is-4"></div>
+        </div>
+        <br>
+        <div class="columns">
+            <div class="column is-4"></div>
+            <div class="column">
+                <div class="control">
+                    <button type="submit" class="button is-primary  is-centered">{{ "Update" if data['data_product'] != None else "Add" }}</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</section>
+
+{% endblock %}
