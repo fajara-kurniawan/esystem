@@ -114,6 +114,7 @@
                   {%endif%}
                 <button type="submit" name='transactionid' value="{{ transaction_id }}" class="button is-primary is-centered">{{ "Update" if data != None else "Save" }}</button>
               </div>
+            </form>
                 <div class="control">
                     <button class="button is-primary">
                             <a class="has-text-light" href='{{"/transactions_view/{}".format(transaction_id)}}'>Return</a>
@@ -121,13 +122,12 @@
                 </div>
             </div>
           </div>
-
         </div>
             </div>
                 <div class="column"></div>
             </div>
         </div>
-    </form>
+    
 </section>
 <script type="text/javascript">
 
