@@ -368,32 +368,194 @@ def transaction_detail_input():
     product_sell_price = request.form['productsellprice']
     product_total = request.form['producttotal']
     product_profit = request.form['productprofit']
-    try:
-        transaction_detail_id = request.form['transactiondetailid']
-
-        sql =''' UPDATE transactions_detail
-        SET product_id = (select p.product_id from products p 
-        join brands b
-        on p.brand_id = b.brand_id 
-        where p.product_name = "{}" and b.brand_name = "{}"),
-        amount = {},
-        sell_price = {},
-        total = {},
-        profit = {}
-        where transaction_detail_id = {}'''.format(product_name,brand_name,product_amount,
-                                                   product_sell_price,product_total,product_profit,transaction_detail_id)
-    except:
-        sql = """
-        insert into transactions_detail(product_id,transaction_id,amount,sell_price,total,profit) 
-        values ((select p.product_id from products p 
-        join brands b
-        on p.brand_id = b.brand_id 
-        where p.product_name = "{}" and b.brand_name = "{}"),{},{},{},{},{})
-        """.format(product_name,brand_name,transaction_id,product_amount,product_sell_price,product_total,product_profit)
-
+    transaction_detail_id = request.form.get('transactiondetailid')
+    raw_product_amount = product_amount
     conn = get_db_connection()
-    conn.execute(sql)
-    conn.commit()
+    if transaction_detail_id:
+        try:
+            with conn:
+                sql_get_detail_inventory = """
+                SELECT * from transactions_detail_inventory tdv where tdv.transaction_detail_id = {} 
+                and is_deleted = 0
+                order by transaction_detail_inventory_id
+                """.format((transaction_detail_id))
+
+                cursor = conn.execute(sql_get_detail_inventory)
+                tdi = cursor.fetchall()
+                data_before = {}
+                for row in tdi:
+                    data_before[row['purchase_id']] = row['amount_taken']
+
+                returned_amount = {}
+                set_amount = {}
+                deleted_tdi = []
+                flag_return = False
+                for key, value in data_before.items():
+                    if not flag_return:
+                        diff = int(product_amount) - value
+                        if diff <= 0:
+                            returned_amount[key] = value - int(product_amount)
+                            set_amount[key] = product_amount
+                            flag_return = True
+                        else:
+                            returned_amount[key] = 0
+                            set_amount[key] = diff
+                            product_amount = diff
+                    else:
+                        deleted_tdi.append(key)
+                        returned_amount[key] = value
+                print(returned_amount)
+                print(set_amount)
+                print(deleted_tdi)
+                print(int(product_amount))
+                if int(product_amount) > 0:
+
+                    sql_get_remaining = """
+                    select p.purchase_id,p.remaining from purchases p  where p.product_id = (select p.product_id from products p 
+                    join brands b
+                    on p.brand_id = b.brand_id 
+                    where p.product_name = "{}" and b.brand_name = "{}") 
+                    and is_deleted = 0 and remaining > 0 order by date 
+                    """.format(product_name, brand_name)
+                    print("ikiii")
+                    print(sql_get_remaining)
+                    cursor = conn.execute(sql_get_remaining)
+                    used_purchase_id = {}
+                    for row in cursor.fetchall():
+                        amount_left = row['remaining'] - int(product_amount)
+                        if amount_left >= 0:
+                            used_purchase_id[row['purchase_id']] = int(product_amount)
+                            break
+                        else:
+                            product_amount = int(product_amount) - row['remaining']
+                            used_purchase_id[row['purchase_id']] = row['remaining']
+
+                    for key, value in used_purchase_id.items():
+                        sql_transaction_detail_inventory = """
+                        insert into transactions_detail_inventory(transaction_detail_id,purchase_id,product_id
+                        ,amount_taken,qty_before_taken)
+                        values({},{},(select p.product_id from products p
+                        join brands b
+                        on p.brand_id = b.brand_id
+                        where p.product_name = "{}" and b.brand_name = "{}"),{},
+                        (select p.remaining from purchases p where p.purchase_id = {} limit 1))
+                        """.format(transaction_detail_id, key, product_name, brand_name, value, key)
+                        print("ono")
+                        print(sql_transaction_detail_inventory)
+                        conn.execute(sql_transaction_detail_inventory)
+
+                        sql_update_purchase = """
+                        UPDATE purchases SET remaining = remaining-{} where purchase_id = {}
+                        """.format(value, key)
+
+                        conn.execute(sql_update_purchase)
+
+                else:
+                    for key,value in set_amount.items():
+
+                        sql_update_transaction_detail_invetory = """
+                        UPDATE transactions_detail_inventory 
+                        SET amount_taken = {}
+                        where purchase_id = {} and transaction_detail_id = {}
+                        """.format(value,key,transaction_detail_id)
+
+                        conn.execute(sql_update_transaction_detail_invetory)
+
+                    for key,value in returned_amount.items():
+                        sql_update_purchase = """
+                        UPDATE purchases 
+                        SET remaining = remaining + {}
+                        where purchase_id = {}
+                        """.format(value,key)
+
+                        conn.execute(sql_update_purchase)
+
+                    for key in deleted_tdi:
+
+                        sql_delete_transaction_detail_inventory = """
+                        UPDATE transactions_detail_inventory
+                        SET is_deleted = 1
+                        where purchase_id = {} and transaction_detail_id = {}
+                        """.format(key,transaction_detail_id)
+
+                        conn.execute(sql_delete_transaction_detail_inventory)
+
+                sql_update_transaction_detail =''' UPDATE transactions_detail
+                SET product_id = (select p.product_id from products p 
+                join brands b
+                on p.brand_id = b.brand_id 
+                where p.product_name = "{}" and b.brand_name = "{}"),
+                amount = {},
+                sell_price = {},
+                total = {},
+                profit = {}
+                where transaction_detail_id = {}'''.format(product_name,brand_name,raw_product_amount,
+                                                           product_sell_price,product_total,product_profit,transaction_detail_id)
+
+
+                conn.execute(sql_update_transaction_detail)
+
+        except Exception as e:
+            print(e)
+            return "problem with sqllite"
+    else:
+        try:
+            with conn:
+                sql_get_remaining = """
+                select p.purchase_id,p.remaining from purchases p  where p.product_id = (select p.product_id from products p 
+                join brands b
+                on p.brand_id = b.brand_id 
+                where p.product_name = "{}" and b.brand_name = "{}") 
+                and is_deleted = 0 and remaining > 0 order by date 
+                """.format(product_name, brand_name)
+
+                cursor = conn.execute(sql_get_remaining)
+                used_purchase_id = {}
+                for row in cursor.fetchall():
+                    amount_left = row['remaining'] - int(product_amount)
+                    if amount_left >= 0:
+                        used_purchase_id[row['purchase_id']] = int(product_amount)
+                        break
+                    else:
+                        product_amount = int(product_amount) - row['remaining']
+                        used_purchase_id[row['purchase_id']] = row['remaining']
+
+                sql_insert = """
+                insert into transactions_detail(product_id,transaction_id,amount,sell_price,total,profit) 
+                values ((select p.product_id from products p 
+                join brands b
+                on p.brand_id = b.brand_id 
+                where p.product_name = "{}" and b.brand_name = "{}"),{},{},{},{},{})
+                """.format(product_name, brand_name, transaction_id, raw_product_amount, product_sell_price, product_total,
+                           product_profit)
+
+                conn.execute(sql_insert)
+
+                row_id = conn.execute('SELECT last_insert_rowid() as last_row').fetchall()[0]['last_row']
+                for key, value in used_purchase_id.items():
+
+                    sql_transaction_detail_inventory = """
+                    insert into transactions_detail_inventory(transaction_detail_id,purchase_id,product_id
+                    ,amount_taken,qty_before_taken)
+                    values({},{},(select p.product_id from products p
+                    join brands b
+                    on p.brand_id = b.brand_id
+                    where p.product_name = "{}" and b.brand_name = "{}"),{},
+                    (select p.remaining from purchases p where p.purchase_id = {} limit 1))
+                    """.format(row_id,key,product_name,brand_name,value,key)
+
+                    conn.execute(sql_transaction_detail_inventory)
+
+                    sql_update_purchase = """
+                    UPDATE purchases SET remaining = remaining-{} where purchase_id = {}
+                    """.format(value,key)
+
+                    conn.execute(sql_update_purchase)
+
+        except Exception as e:
+            print(e)
+            return "problem with sqllite"
+
     conn.close()
 
     return redirect(url_for("transactions_view",transactionid=transaction_id))
@@ -421,11 +583,18 @@ def get_product(brand):
     conn = get_db_connection()
 
     sql = '''
-        select p.product_name from products p where p.brand_id = (select b.brand_id from brands b where b.brand_name = '{}')
-        '''.format(brand)
+    select p.product_name,a.total_stock from products p 
+    join
+    (select product_id,sum(p.remaining) as total_stock from purchases p group by p.product_id ) a
+    on p.product_id = a.product_id
+    where p.brand_id = (select b.brand_id from brands b where b.brand_name = '{}') and is_deleted = 0
+    '''.format(brand)
     cursor = conn.execute(sql)
-    product_result = cursor.fetchall()
-    product_result = [x[0] for x in product_result]
+    product_result = {}
+
+    for row in cursor.fetchall():
+        product_result[row['product_name']] = row['total_stock']
+
     conn.close()
     if not product_result:
         return jsonify([])
@@ -463,7 +632,7 @@ def brands_view(brandid):
     from brands b left join 
     ( select p.brand_id, count(*) as number_of_products from products p group by p.brand_id) p
     on b.brand_id = p.brand_id 
-    where b.brand_id = '{}'
+    where b.brand_id = '{}' and is_deleted = 0
     '''.format(brandid)
     cursor = conn.execute(sql_brands)
     data_brand = cursor.fetchall()[0]
@@ -493,7 +662,7 @@ def brands():
         conn = get_db_connection()
 
         sql_brand = '''
-        SELECT b.brand_id,b.brand_name from brands b where b.brand_id = '{}'
+        SELECT b.brand_id,b.brand_name from brands b where b.brand_id = '{}' and is_deleted = 0
         '''.format(brandid)
 
         cursor = conn.execute(sql_brand)
@@ -583,13 +752,12 @@ def brands_delete():
 @app.route('/products',methods=['POST'])
 def product():
 
-    
     brand_id = request.form['brandid']
     product_id = request.form.get('productid')
     if product_id:
         conn = get_db_connection()
         sql = """
-        SELECT p.product_id, p.product_name from products p  where product_id = '{}'
+        SELECT p.product_id, p.product_name from products p  where product_id = '{}' and is_deleted = 0
         """.format(product_id)
 
         cursor = conn.execute(sql)
@@ -609,8 +777,6 @@ def product_input():
     product_id = request.form.get("productid")
     product_name = request.form.get("productname")
     conn = get_db_connection()
-
-
     if product_id:
         sql_update = '''
         UPDATE products 

@@ -42,7 +42,7 @@
             <div class="field">
               <div class="control">
                   <div class="select">
-                    <select class="product_name" name="productname">
+                    <select class="product_name" name="productname" id="productname">
                         {% if data %}
                         <option value="{{data['data_detail']['product_name']}}"> {{data['data_detail']['product_name']}} </option>
                         {% else %}
@@ -61,9 +61,15 @@
           <div class="field-body">
             <div class="field">
               <div class="control">
-                <input class="input" type="number" name="productamount" value="{{ data['data_detail']['amount'] if data != None else 0 }}">
+                <input class="input" type="number" id="productamount" name="productamount" value="{{ data['data_detail']['amount'] if data != None else 0 }}">
               </div>
             </div>
+              <div class="field-label">
+                  <label class="label">Available Qty:</label>
+              </div>
+              <div class="field-label is-medium">
+                  <label class="label" id="max_amount">0</label>
+              </div>
           </div>
         </div>
         <div class="field is-horizontal">
@@ -130,27 +136,34 @@
     
 </section>
 <script type="text/javascript">
+$('.brand_name').change(function() {
 
-   $('.brand_name').change(function() {
+  var brand_name = $('.brand_name').val();
+  // Make Ajax Request and expect JSON-encoded data
+  $.getJSON(
+    '/get_product' + '/' + brand_name,
+    function(data) {
 
-      var brand_name = $('.brand_name').val();
+      // Remove old options
+      $('.product_name').find('option').remove();
 
-      // Make Ajax Request and expect JSON-encoded data
-      $.getJSON(
-        '/get_product' + '/' + brand_name,
-        function(data) {
+      // Add new items
+       $('.product_name').append('<option disabled selected value> -- select product -- </option>')
+      $.each(data, function(key, val) {
+        var option_item = '<option value="' + key + '" data-max="'+val+'">' + key + '</option>'
+        $('.product_name').append(option_item);
+      });
+    }
+  );
+});
 
-          // Remove old options
-          $('.product_name').find('option').remove();
+$('.product_name').change(function(){
+    var selectedIndex = $('.product_name').prop("selectedIndex");
+    var selectedOption = $('.product_name').find("option")[selectedIndex];
+    $('#max_amount').text($(selectedOption).data('max'));
+    $('#productamount').attr('max', $(selectedOption).data('max'));
+});
 
-          // Add new items
-          $.each(data, function(key, val) {
-            var option_item = '<option value="' + val + '">' + val + '</option>'
-            $('.product_name').append(option_item);
-          });
-        }
-      );
-    });
 
 </script>
 {% endblock %}
