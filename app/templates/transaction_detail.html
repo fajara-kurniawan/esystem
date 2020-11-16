@@ -68,7 +68,7 @@
                   <label class="label">Available Qty:</label>
               </div>
               <div class="field-label is-medium">
-                  <label class="label" id="max_amount">0</label>
+                  <label class="label" id="max_amount">{{ data['data_stock'] if data != None else 0 }}</label>
               </div>
           </div>
         </div>
