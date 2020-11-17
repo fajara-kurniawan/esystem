@@ -6,34 +6,36 @@
             <div class="columns">
                 <div class="column"></div>
                 <div class="column is-half is-centered">
-                                <div class="field is-horizontal">
-          <div class="field-label is-normal">
-            <label class="label">Brand</label>
-          </div>
-          <div class="field-body">
-            <div class="field">
-              <div class="control">
-                  <div class="select">
-                    <select class="brand_name" name="brandname">
-                        {% if data %}
-                            <option value="{{data['data_detail']['brand_name']}}"> {{data['data_detail']['brand_name']}} </option>
-                            {% for brand in brand_result %}
-                                {% if brand != data['data_detail']['brand_name'] %}
-                                    <option value="{{brand}}">{{brand}}</option>
-                                {% endif %}
-                            {% endfor %}
-                        {% else %}
-                            <option disabled selected value> -- select brand -- </option>-->
-                            {% for brand in brand_result %}
-                                    <option value="{{brand}}">{{brand}}</option>-->
-                            {% endfor %}
-                        {% endif %}
-                    </select>
-                  </div>
-              </div>
-            </div>
-          </div>
-        </div>
+                    <h2 class="title is-bold is-4">Product Detail</h2>
+                    <br>
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label">Brand</label>
+                        </div>
+                    <div class="field-body">
+                        <div class="field">
+                          <div class="control">
+                              <div class="select">
+                                <select class="brand_name" name="brandname">
+                                    {% if data %}
+                                        <option value="{{data['data_detail']['brand_name']}}"> {{data['data_detail']['brand_name']}} </option>
+                                        {% for brand in brand_result %}
+                                            {% if brand != data['data_detail']['brand_name'] %}
+                                                <option value="{{brand}}">{{brand}}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <option disabled selected value> -- select brand -- </option>-->
+                                        {% for brand in brand_result %}
+                                                <option value="{{brand}}">{{brand}}</option>-->
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                              </div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
         <div class="field is-horizontal">
           <div class="field-label is-normal">
             <label class="label">Product Name</label>
@@ -163,7 +165,5 @@ $('.product_name').change(function(){
     $('#max_amount').text($(selectedOption).data('max'));
     $('#productamount').attr('max', $(selectedOption).data('max'));
 });
-
-
 </script>
 {% endblock %}

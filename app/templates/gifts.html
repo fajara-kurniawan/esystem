@@ -1,0 +1,114 @@
+{% extends "layout_main.html" %}
+{% block content %}
+<section>
+    <form method="POST" action="/gifts_input">
+        <div class="container" id="areaproduct">
+            <div class="columns">
+                <div class="column"></div>
+                <div class="column is-half is-centered">
+                    <h2 class="title is-bold is-4">Gift Detail</h2>
+                    <br>
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label">Brand</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                              <div class="control">
+                                  <div class="select">
+                                    <select class="brand_name" name="brandname">
+                                        {% if data %}
+                                            <option value="{{data['data_gift']['brand_name']}}"> {{data['data_gift']['brand_name']}} </option>
+                                            {% for brand in brand_result %}
+                                                {% if brand != data['data_gift']['brand_name'] %}
+                                                    <option value="{{brand}}">{{brand}}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            <option disabled selected value> -- select brand -- </option>-->
+                                            {% for brand in brand_result %}
+                                                    <option value="{{brand}}">{{brand}}</option>-->
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                  </div>
+                              </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field is-horizontal">
+                      <div class="field-label is-normal">
+                        <label class="label">Product Name</label>
+                      </div>
+                      <div class="field-body">
+                        <div class="field">
+                          <div class="control">
+                              <div class="select">
+                                <select class="product_name" name="productname" id="productname">
+                                    {% if data %}
+                                    <option value="{{data['data_gift']['product_name']}}"> {{data['data_gift']['product_name']}} </option>
+                                    {% else %}
+                                    <option disabled selected value> -- select product -- </option>
+                                    {% endif %}
+                                </select>
+                              </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="field is-horizontal">
+                          <div class="field-label is-normal">
+                            <label class="label">Product Amount</label>
+                          </div>
+                          <div class="field-body">
+                            <div class="field">
+                              <div class="control">
+                                <input class="input" type="number" id="productamount" name="productamount" value="{{ data['data_gift']['amount_taken'] if data != None else 0 }}">
+                              </div>
+                            </div>
+                              <div class="field-label">
+                                  <label class="label">Available Qty:</label>
+                              </div>
+                              <div class="field-label is-medium">
+                                  <label class="label" id="max_amount">{{ data['data_stock'] if data != None else 0 }}</label>
+                              </div>
+                          </div>
+                        </div>
+
+                    </div>
+                <div class="column"></div>
+            </div>
+
+        </div>
+    </form>
+</section>
+<script type="text/javascript">
+$('.brand_name').change(function() {
+
+  var brand_name = $('.brand_name').val();
+  // Make Ajax Request and expect JSON-encoded data
+  $.getJSON(
+    '/get_product' + '/' + brand_name,
+    function(data) {
+
+      // Remove old options
+      $('.product_name').find('option').remove();
+
+      // Add new items
+       $('.product_name').append('<option disabled selected value> -- select product -- </option>')
+      $.each(data, function(key, val) {
+        var option_item = '<option value="' + key + '" data-max="'+val+'">' + key + '</option>'
+        $('.product_name').append(option_item);
+      });
+    }
+  );
+});
+
+$('.product_name').change(function(){
+    var selectedIndex = $('.product_name').prop("selectedIndex");
+    var selectedOption = $('.product_name').find("option")[selectedIndex];
+    $('#max_amount').text($(selectedOption).data('max'));
+    $('#productamount').attr('max', $(selectedOption).data('max'));
+});
+</script>
+{% endblock%}

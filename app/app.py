@@ -176,8 +176,21 @@ def transactions_view(transactionid):
     col_names_detail = [description[0] for description in cursor.description]
     data_detail = cursor.fetchall()
 
+    sql_gift = """
+    SELECT g.gift_id,g.product_id,p.product_name ,g.amount_taken,p2.buy_price*g.amount_taken as gift_cost FROM gifts g  
+    join products p 
+    on g.product_id = p.product_id 
+    join purchases p2 
+    on p2.purchase_id = g.purchase_id 
+    where g.transaction_id = {} and g.is_deleted = 0
+    """.format(transactionid)
+
+    cursor = conn.execute(sql_gift)
+    data_gift = cursor.fetchall()
+
     data = {"data_trans": data_trans,
             "data_detail": data_detail,
+            "data_gift" : data_gift,
             "col_names_detail": col_names_detail}
 
     conn.close()
@@ -323,45 +336,55 @@ def transactions_delete():
 @flask_login.login_required
 def transaction_detail():
     conn = get_db_connection()
-    sql = '''
-    select b.brand_name from brands b
-    '''
-    cursor = conn.execute(sql)
-    brand_result = cursor.fetchall()
-    brand_result = [x[0] for x in brand_result]
+    transaction_detail_id = request.form.get('transactiondetailid')
+    with conn:
+        try:
+            sql = '''
+                select b.brand_name from brands b
+                '''
+            cursor = conn.execute(sql)
+            brand_result = cursor.fetchall()
+            brand_result = [x[0] for x in brand_result]
+        except:
+            brand_result = []
+
     transaction_id = request.form.get('transactionid')
-    try:
-        transaction_detail_id = request.form['transactiondetailid']
-        sql_detail = """
-            select td.transaction_detail_id ,b.brand_name,p.product_name , td.amount, td.sell_price, td.total, td.profit  
-            from transactions_detail td 
-            join products p
-            on td.product_id = p.product_id 
-            join brands b
-            on p.brand_id  = b.brand_id 
-            where td.transaction_detail_id = {}
-        """.format(transaction_detail_id)
 
-        cursor = conn.execute(sql_detail)
-        col_names_detail = [description[0] for description in cursor.description]
-        data_detail = cursor.fetchall()[0]
+    if transaction_detail_id:
+        with conn:
+            try:
+                sql_detail = """
+                    select td.transaction_detail_id ,b.brand_name,p.product_name , td.amount, td.sell_price, td.total, td.profit  
+                    from transactions_detail td 
+                    join products p
+                    on td.product_id = p.product_id 
+                    join brands b
+                    on p.brand_id  = b.brand_id 
+                    where td.transaction_detail_id = {}
+                """.format(transaction_detail_id)
 
-        sql_stock = """
-        select sum(remaining) as total_remaining from purchases p  where p.product_id = (select td.product_id 
-        from transactions_detail td where td.transaction_detail_id = {}) 
-        and is_deleted = 0 and remaining > 0 order by date 
-        """.format(transaction_detail_id)
+                cursor = conn.execute(sql_detail)
+                col_names_detail = [description[0] for description in cursor.description]
+                data_detail = cursor.fetchall()[0]
 
-        cursor = conn.execute(sql_stock)
+                sql_stock = """
+                select sum(remaining) as total_remaining from purchases p  where p.product_id = (select td.product_id 
+                from transactions_detail td where td.transaction_detail_id = {}) 
+                and is_deleted = 0 and remaining > 0 order by date 
+                """.format(transaction_detail_id)
 
-        data_stock = cursor.fetchall()[0]['total_remaining']
+                cursor = conn.execute(sql_stock)
 
-        data = {
-            "data_detail": data_detail,
-            "data_stock" : data_stock,
-            "col_names_detail": col_names_detail
-        }
-    except:
+                data_stock = cursor.fetchall()[0]['total_remaining']
+
+                data = {
+                    "data_detail": data_detail,
+                    "data_stock" : data_stock,
+                    "col_names_detail": col_names_detail
+                }
+            except:
+                data = None
+    else:
         data = None
 
     conn.close()
@@ -487,7 +510,6 @@ def transactions_detail_delete():
 
     try:
         with conn:
-            print("iki")
             sql_get_detail_inventory = """
            SELECT * from transactions_detail_inventory tdv where tdv.transaction_detail_id = {} 
            and is_deleted = 0
@@ -527,8 +549,8 @@ def get_product(brand):
     conn = get_db_connection()
 
     sql = '''
-    select p.product_name,a.total_stock from products p 
-    join
+    select p.product_name,CASE when a.total_stock IS NULL then 0 else a.total_stock end as total_stock from products p 
+    left join
     (select product_id,sum(p.remaining) as total_stock from purchases p group by p.product_id ) a
     on p.product_id = a.product_id
     where p.brand_id = (select b.brand_id from brands b where b.brand_name = '{}') and is_deleted = 0
@@ -585,7 +607,6 @@ def brands_view(brandid):
         sql_products = '''
         SELECT p.product_id,p.product_name from products p where p.brand_id = '{}' and is_deleted = 0
         '''.format(brandid)
-
         cursor = conn.execute(sql_products)
         data_product = cursor.fetchall()
     except:
@@ -795,3 +816,104 @@ def products_delete():
     conn.close()
     
     return redirect(url_for("brands_view", brandid=brand_id))
+
+
+@app.route('/gifts_delete' ,methods=['POST'])
+@flask_login.login_required
+def gifts_delete():
+    transaction_id = request.form.get('transactionid')
+    gift_id = request.form.get('giftid')
+
+    conn = get_db_connection()
+
+    try:
+        with conn:
+            sql_get_detail_gift = """
+           SELECT * from gifts g where g.gift_id = {} 
+           and is_deleted = 0
+           order by gift_id desc
+           """.format(gift_id)
+
+            cursor = conn.execute(sql_get_detail_gift)
+            tdi = cursor.fetchall()
+            data_before = {}
+            for row in tdi:
+                data_before[row['purchase_id']] = row['amount_taken']
+
+            for key, value in data_before.items():
+                sql_update_purchase = """
+                               UPDATE purchases SET remaining = remaining+{} where purchase_id = {}
+                               """.format(value, key)
+
+                conn.execute(sql_update_purchase)
+
+            sql_delete_gift = """
+            UPDATE gifts
+            SET is_deleted = 1
+            WHERE gift_id = {}
+            """.format(gift_id)
+            conn.execute(sql_delete_gift)
+
+    except Exception as e:
+        print(e)
+        return "problem with sqllite"
+
+    conn.close()
+    return redirect(url_for("transactions_view",transactionid=transaction_id))
+
+
+@app.route('/gifts',methods=['POST'])
+@flask_login.login_required
+def gifts():
+    conn = get_db_connection()
+    transaction_id = request.form.get('transactionid')
+    gift_id = request.form.get('giftid')
+
+    with conn:
+        try:
+            sql = '''
+                select b.brand_name from brands b
+                '''
+            cursor = conn.execute(sql)
+            brand_result = cursor.fetchall()
+            brand_result = [x[0] for x in brand_result]
+        except:
+            brand_result = []
+
+    if gift_id:
+        with conn:
+            try:
+                sql = """
+                SELECT g.gift_id,g.product_id,p.product_name,b.brand_name ,g.amount_taken FROM gifts g  
+                join products p 
+                on g.product_id = p.product_id 
+                join brands b
+                on b.brand_id = p.brand_id
+                where g.gift_id = {}
+                """.format(gift_id)
+
+                cursor = conn.execute(sql)
+
+                data_gift = cursor.fetchall()[0]
+
+                sql_stock = """
+                                select sum(remaining) as total_remaining from purchases p  where p.product_id = (select g.product_id 
+                                from gifts g where g.gift_id = 1) 
+                                and is_deleted = 0 and remaining > 0 order by date 
+                                """.format(gift_id)
+
+                cursor = conn.execute(sql_stock)
+
+                data_stock = cursor.fetchall()[0]['total_remaining']
+
+                data = {'data_gift' : data_gift,
+                        'data_stock' : data_stock}
+            except:
+                data = {'data_gift': None,
+                        data_stock : None}
+
+    else:
+        data = None
+
+    return render_template("gifts.html",data=data,brand_result=brand_result,transaction_id=transaction_id, gift_id=gift_id)
+

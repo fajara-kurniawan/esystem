@@ -97,7 +97,6 @@
             </div>
             <div class="column"></div>
         </div>
-
     </div>
     <div class="container">
         {% for row in data['data_detail'] %}
@@ -165,6 +164,79 @@
                 <form method="POST" action="/transaction_detail" class="control">
                     <input type="hidden" value="{{ data['data_trans']['transaction_id'] }}" name="transactionid"/>
                     <button class="button is-primary is-medium">Add Product</button>
+                </form>
+            </div>
+            <div class="column is-2"></div>
+        </div>
+    </div>
+</section>
+<br>
+<br>
+<section>
+    <div class="container">
+        <div class="columns">
+            <div class="column is-2"></div>
+            <div class="column">
+                <h2 class="title is-bold is-4">Gift Detail</h2>
+                {%if not data['data_detail']%}
+                <h2 class="subtitle is-bold">No Gift</h2>
+                {%endif%}
+            </div>
+            <div class="column"></div>
+        </div>
+        {% for row in data['data_gift'] %}
+        <div class="columns">
+            <div class="column is-2"></div>
+            <div class="column">
+                    <div class="container">
+                        <div class="tile is-parent">
+                          <article class="tile is-child notification is-info">
+                          </article>
+                        </div>
+                        <table class="table">
+                            <tr>
+                                <td><label class="label">Product Name</label></td>
+                                <td><input class="input is-primary" type="text" name="productname" value="{{ row['product_name'] }}" disabled></td>
+                            </tr>
+                            <tr>
+                                <td><label class="label">Amount</label></td>
+                                <td><input class="input is-primary" type="text" name="amounttaken" value="{{ row['amount_taken'] }}" disabled></td>
+                            </tr>
+                            <tr>
+                                <td><label class="label">Gift Cost</label></td>
+                                <td><input class="input is-primary" type="text" name="giftcost" value="{{ row['gift_cost'] }}" disabled></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            <div class="column is-2"></div>
+        </div>
+        <div class="columns">
+            <div class="column is-2"></div>
+            <div class="column is-3">
+                <div class="field is-grouped">
+                <form method="POST" action="/gifts_detail" class="control">
+                    <input type="hidden" value="{{ row['giftid'] }}" name="giftid"/>
+                    <input type="hidden" value="{{ data['data_trans']['transaction_id'] }}" name="transactionid"/>
+                    <button class="button is-primary">Update</button>
+                </form>
+                <form method="POST" action="/gifts_delete" class="control">
+                    <input type="hidden" value="{{ row['gift_id'] }}" name="giftid"/>
+                    <input type="hidden" value="{{ data['data_trans']['transaction_id'] }}" name="transactionid"/>
+                    <button class="button is-danger">Delete</button>
+                </form>
+                </div>
+            </div>
+            <div class="column"></div>
+        </div>
+        {% endfor %}
+        <br>
+        <div class="columns">
+            <div class="column is-2"></div>
+            <div class="column">
+                <form method="POST" action="/gifts" class="control">
+                    <input type="hidden" value="{{ data['data_trans']['transaction_id'] }}" name="transactionid"/>
+                    <button class="button is-primary is-medium">Add Gift</button>
                 </form>
             </div>
             <div class="column is-2"></div>
